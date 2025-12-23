@@ -67,7 +67,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.ElevatedCard
 import com.unity3d.ads.UnityAds
 import com.google.android.gms.ads.MobileAds
-import com.google.android.gms.ads.RequestConfiguration
+import android.app.AlarmManager
 
 
 // reset を 0時とみなすため、時刻を reset 分だけマイナスした日の epochDay を使う
@@ -88,6 +88,16 @@ class MainActivity : ComponentActivity() {
 
         // ② ステータスバーを透明に
         window.statusBarColor = android.graphics.Color.TRANSPARENT
+// ★ Android 12+：正確なアラームが許可されているか確認
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            val am = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            if (!am.canScheduleExactAlarms()) {
+                // ユーザーに「正確なアラーム」を許可してもらう設定画面へ
+                startActivity(
+                    Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                )
+            }
+        }
 
         // ③ ステータスバーのアイコンを「ダーク（黒寄り）」に
         val controller = WindowCompat.getInsetsController(window, window.decorView)

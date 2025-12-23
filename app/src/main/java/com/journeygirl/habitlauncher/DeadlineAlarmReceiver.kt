@@ -6,10 +6,35 @@ import android.content.Intent
 import kotlinx.coroutines.flow.first
 import java.time.LocalTime
 import java.time.ZonedDateTime
-
+import android.content.pm.PackageManager
 class DeadlineAlarmReceiver : BroadcastReceiver() {
+
+    private fun isPackageInstalled(context: Context, pkg: String): Boolean {
+        return try {
+            context.packageManager.getApplicationInfo(pkg, 0)
+            true
+        } catch (_: PackageManager.NameNotFoundException) {
+            false
+        }
+    }
+
     override fun onReceive(context: Context, intent: Intent) {
         val pkg = intent.getStringExtra("target_pkg") ?: return
+
+        // ✅ ★ここが「通知発火時の回避」本体：まず存在チェック
+        if (!isPackageInstalled(context, pkg)) {
+            // ① 将来の発火を止める（AlarmManagerのPendingIntentをキャンセル）
+            AlarmScheduler.cancelForPackage(context, pkg)
+
+            // ② 追跡対象から外す（※この関数はあなたのDataStore実装に合わせて用意）
+            // removeSelectedPackage(context, pkg)
+
+            // ③（任意）関連データも掃除したいなら（存在する関数だけ呼んでOK）
+            // clearLaunched(context, pkg)
+            // setLastNotifiedCid(context, pkg, -1)
+
+            return
+        }
 
         ensureNotificationChannel(context)
 
